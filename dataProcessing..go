@@ -13,5 +13,6 @@ func extractAddressFromPath(r.URL.Path) string{
 
 func calcRep (w http.ResponseWriter, r *http.Request){
 	walletAddress := extractAddressFromPath(r.URL.Path)
-	
+	// use caching to check if the wallet has been requested before. 
+	// the cache will be different every day/week.
 }
