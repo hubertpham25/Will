@@ -4,15 +4,16 @@ import os
 import requests
 
 load_dotenv()
-
-alchemyNodeURL = "https://eth-mainnet.g.alchemy.com/v2/jeCvmjj_CZDDvzJxXxyq_"
-etherscanKey = os.getenv("ETHERSCAN_API")
 w3 = Web3(Web3.HTTPProvider(alchemyNodeURL))
+alchemyNodeURL = "https://eth-mainnet.g.alchemy.com/v2/jeCvmjj_CZDDvzJxXxyq_"
 
+#etherscan initiation variables
+etherscanKey = os.getenv("ETHERSCAN_API")
 address = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+etherscanURL = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&sort=asc&apikey={etherscanKey}"
 
 #list of scam addresses taken from CrytoScamDB
-scamAddresses = ["0x08389B19ad52f0d983609ab785b3a43A0E90355F",
+scamAddresses = {"0x08389B19ad52f0d983609ab785b3a43A0E90355F",
                  "0x7bb386c33486fe345168d0af94bef03897e16022",
                  "0xfa2e4bddb3899dFB0d91A70744739d9f76692755",
                  "0x5d82db63cf0c54d47006d416bdc7dab09ea2f3f1",
@@ -26,7 +27,7 @@ scamAddresses = ["0x08389B19ad52f0d983609ab785b3a43A0E90355F",
                  "0x774148e22F021972bfe082e1548E5d9dC6e1D76E",
                  "0xeeCC46A74ceA6133a12672bD62D5167877B4d521",
                  "0xeeCC46A74ceA6133a12672bD62D5167877B4d521",
-                 "0xe5b913f91f2b90c5cd04d711e1eb3214c56dba98"]
+                 "0xe5b913f91f2b90c5cd04d711e1eb3214c56dba98"}
 
 def getWalletBalance(address):
     currentWeiBalance = w3.eth.get_balance(address)
@@ -34,13 +35,23 @@ def getWalletBalance(address):
     return currentEtherBalance
 
 def getTransactions(address):
-    url = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&sort=asc&apikey={etherscanKey}"
-    response = requests.get(url).json()
+    response = requests.get(etherscanURL).json()
     
     totalTransactions = response["result"] #list of dictionaries for each transactions
     numOfTransactions = len(totalTransactions) #number of transactions on address
+    return numOfTransactions
+
+def scamInteraction(address, scamAddresses):
+    response = requests.get(etherscanURL)
+    transactions = response.json().get("result", [])
     
-def scamInteraction(address):
-    
+    for transaction in transactions:
+        toAddress = transaction["to"].lower()
+        fromAddress = transaction["from"].lower()
+        
+        if toAddress in scamAddresses or fromAddress in scamAddresses:
+            return True
+        else:
+            return False
     
     
