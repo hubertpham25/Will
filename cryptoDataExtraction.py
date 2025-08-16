@@ -21,7 +21,9 @@ def getTransactions(address):
     response = requests.get(url).json()
     
     totalTransactions = response["result"] #list of dictionaries for each transactions
-    
     numOfTransactions = len(totalTransactions) #number of transactions on address
+    
+def getListOfScamAddresses():
+    return None
     
     
