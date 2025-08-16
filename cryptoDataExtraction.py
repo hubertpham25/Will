@@ -4,12 +4,15 @@ import os
 import requests
 
 load_dotenv()
-w3 = Web3(Web3.HTTPProvider(alchemyNodeURL))
+
+#alchemy and web3 initiation variables
 alchemyNodeURL = "https://eth-mainnet.g.alchemy.com/v2/jeCvmjj_CZDDvzJxXxyq_"
+w3 = Web3(Web3.HTTPProvider(alchemyNodeURL))
+
 
 #etherscan initiation variables
 etherscanKey = os.getenv("ETHERSCAN_API")
-address = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+address = "0xA97b29B1ee80ED31eB9977E1B3fcda4a803A65f9"
 etherscanURL = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&sort=asc&apikey={etherscanKey}"
 
 #list of scam addresses taken from CrytoScamDB
@@ -29,11 +32,13 @@ scamAddresses = {"0x08389B19ad52f0d983609ab785b3a43A0E90355F",
                  "0xeeCC46A74ceA6133a12672bD62D5167877B4d521",
                  "0xe5b913f91f2b90c5cd04d711e1eb3214c56dba98"}
 
+#get current wallet balance 
 def getWalletBalance(address):
     currentWeiBalance = w3.eth.get_balance(address)
     currentEtherBalance = Web3.from_wei(currentWeiBalance, "ether")
     return currentEtherBalance
 
+#get total transactions
 def getTransactions(address):
     response = requests.get(etherscanURL).json()
     
@@ -41,17 +46,24 @@ def getTransactions(address):
     numOfTransactions = len(totalTransactions) #number of transactions on address
     return numOfTransactions
 
+#scan for scam interactions
 def scamInteraction(address, scamAddresses):
-    response = requests.get(etherscanURL)
+    url = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&sort=asc&apikey={etherscanKey}"
+    
+    normalizedScamAddresses = {addr.lower() for addr in scamAddresses}
+    
+    response = requests.get(url)
     transactions = response.json().get("result", [])
     
     for transaction in transactions:
-        toAddress = transaction["to"].lower()
-        fromAddress = transaction["from"].lower()
+        toAddress = transaction["to"].lower() if transaction["to"] else "" #additional code added to to and from address to prevent error
+        fromAddress = transaction["from"].lower() if transaction["from"] else ""
         
-        if toAddress in scamAddresses or fromAddress in scamAddresses:
+        if toAddress in normalizedScamAddresses or fromAddress in normalizedScamAddresses:
             return True
-        else:
-            return False
+        
+    return False
+
+print(scamInteraction(address, scamAddresses))
     
     
