@@ -1,86 +1,67 @@
-#Hubert
 import time
-from cryptoDataExtraction import cryptoDB
+from cryptoDataExtraction import get_crypto_data  # Fixed import
 
 wallet_address_cache = dict()
 sec_in_day = 86400
-def calc_rep(urlPath):
-    wallet_address = extract_wallet_address(urlPath)
+
+def calc_rep(wallet_address):  # Fixed parameter name
     if wallet_address in wallet_address_cache:
         cached_score, timestamp = wallet_address_cache[wallet_address]
-
-        # checks if the current time and the timestamp of the address is less than seconds in a day
+        
         if time.time() - timestamp < sec_in_day:
+            evaluation = get_evaluation(cached_score, 200)  # Fixed: define evaluation
             return { 
-                    "Wallet Address": wallet_address, 
-                    "Wallet Reputation Score": cached_score,
-                    "Safe Address": evaluation
-                    }
+                "Wallet Address": wallet_address, 
+                "Wallet Reputation Score": cached_score,
+                "Safe Address": evaluation
+            }
     
-    # if not, it will get a new score for the day
+    # Calculate new score
     new_score = calc_new_rep(wallet_address)
-    max_score = 200
-    if new_score/max_score < 0.2:
-        evaluation = "Not reputable. User does not have enough transaction history."
+    evaluation = get_evaluation(new_score, 200)
     
-    elif new_score/max_score < 0.6:
-        evaluation = "Slightly reputable. User has enough transactions. However, still proceed with caution."
-    
-    else:
-        evaluation = "Reputable. User has enough transactions. Still proceed with caution as always."
-
     wallet_address_cache[wallet_address] = (new_score, time.time())
     return {
-            "wallet address": wallet_address,
-            "wallet reputation score": new_score,
-            "Safe Address": evaluation
-            }
+        "wallet address": wallet_address,
+        "wallet reputation score": new_score,
+        "Safe Address": evaluation
+    }
 
-def extract_wallet_address(urlPath):
-    # urlPath comes in as "/reputation/0x12a343...", 
-    # strip removes "/reputation/", giving us the wallet address
-    wallet_address = urlPath.strip("/reputation/")
-    return wallet_address
+def get_evaluation(score, max_score):
+    ratio = score / max_score
+    if ratio < 0.2:
+        return "Not reputable. User does not have enough transaction history."
+    elif ratio < 0.6:
+        return "Slightly reputable. User has enough transactions. However, still proceed with caution."
+    else:
+        return "Reputable. User has enough transactions. Still proceed with caution as always."
 
 def calc_new_rep(address):
-    # dictionary from cde.py will return number of transactions, 
-    # if the address has been apart of a scam, 
-    # liquidation data which is another dictionary
+    # Get fresh data for this specific address
+    crypto_data = get_crypto_data(address)  # Fixed: dynamic data
     
-    num_of_transaction = cryptoDB["Amount of Transactions"]
-    rep_score = get_rep_score(num_of_transaction, address)
-    scam_status = cryptoDB["Scam Status"]
-    liquidated = cryptoDB["Liquidations"]["liquidated"]
+    num_of_transaction = crypto_data["Amount of Transactions"]
+    rep_score = get_rep_score(num_of_transaction)  # Fixed: removed address param
+    scam_status = crypto_data["Scam Status"]
+    liquidated = crypto_data["Liquidations"]["liquidated"]
 
     if liquidated:
-        rep_score*=0.05
-
-    if scam_status == True:
+        rep_score *= 0.05
+    if scam_status:
         rep_score *= 0.125
 
     return rep_score
 
-def get_rep_score(num_of_transaction, address):
-    max_score = 200
-    cached_score, _ = wallet_address_cache[address]
+def get_rep_score(num_of_transaction):  # Fixed: removed cache logic
     rep_score = 0
-    if cached_score != 0:
-        rep_score = cached_score
     
     if num_of_transaction <= 20:
-        rep_score += min(num_of_transaction, 20)*0.05
+        rep_score = num_of_transaction * 0.05
+    elif num_of_transaction <= 100:
+        rep_score = num_of_transaction * 0.07
+    elif num_of_transaction <= 500:
+        rep_score = num_of_transaction * 0.1
+    else:
+        rep_score = min(num_of_transaction * 0.12, 200)
     
-    elif num_of_transaction <= 100 :
-        rep_score += min(num_of_transaction, 100)*0.07
-
-    elif 100 < num_of_transaction <= 500:
-        rep_score += min(num_of_transaction, 500)*0.1
-    
-    elif num_of_transaction > 500 and rep_score < max_score:
-        rep_score += num_of_transaction*0.12
-    
-    else: 
-        rep_score = 200
-
     return rep_score
-

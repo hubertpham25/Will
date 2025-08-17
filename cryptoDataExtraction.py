@@ -14,8 +14,6 @@ w3 = Web3(Web3.HTTPProvider(alchemyNodeURL))
 
 #etherscan initiation variables
 etherscanKey = os.getenv("ETHERSCAN_API")
-address = "0xA97b29B1ee80ED31eB9977E1B3fcda4a803A65f9"
-etherscanURL = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&sort=asc&apikey={etherscanKey}"
 
 #list of scam addresses taken from CrytoScamDB
 scamAddresses = {"0x08389B19ad52f0d983609ab785b3a43A0E90355F",
@@ -44,8 +42,9 @@ def getWalletBalance(address):
     currentEtherBalance = Web3.from_wei(currentWeiBalance, "ether")
     return currentEtherBalance
 
-#get total transactions
+#get total transactions - FIXED: now uses the address parameter properly
 def getTransactions(address):
+    etherscanURL = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&sort=asc&apikey={etherscanKey}"
     response = requests.get(etherscanURL).json()
     
     totalTransactions = response["result"] #list of dictionaries for each transactions
@@ -135,15 +134,16 @@ def gotLiquidated(address):
         "lastLiquidation": str(timestamp)
     }
 
-#get checked sum address
-checkedSumAddress = toCheckSum(address)
-
-#dictionary
-cryptoDB = {
-    "Wallet Balance": getWalletBalance(checkedSumAddress),
-    "Liquidations": gotLiquidated(checkedSumAddress),
-    "Scam Status": scamInteraction(checkedSumAddress, scamAddresses),
-    "Amount of Transactions": getTransactions(checkedSumAddress),
-}
-
-print(cryptoDB)
+# NEW FUNCTION - This is what you'll import and use in your code
+def get_crypto_data(wallet_address):
+    """Main function to get all crypto data for any wallet address"""
+    checkedSumAddress = toCheckSum(wallet_address)
+    
+    cryptoDB = {
+        "Wallet Balance": getWalletBalance(checkedSumAddress),
+        "Liquidations": gotLiquidated(checkedSumAddress),
+        "Scam Status": scamInteraction(checkedSumAddress, scamAddresses),
+        "Amount of Transactions": getTransactions(checkedSumAddress),
+    }
+    
+    return cryptoDB
