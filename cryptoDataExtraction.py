@@ -9,7 +9,6 @@ load_dotenv()
 alchemyNodeURL = "https://eth-mainnet.g.alchemy.com/v2/jeCvmjj_CZDDvzJxXxyq_"
 w3 = Web3(Web3.HTTPProvider(alchemyNodeURL))
 
-
 #etherscan initiation variables
 etherscanKey = os.getenv("ETHERSCAN_API")
 address = "0xA97b29B1ee80ED31eB9977E1B3fcda4a803A65f9"
@@ -31,6 +30,10 @@ scamAddresses = {"0x08389B19ad52f0d983609ab785b3a43A0E90355F",
                  "0xeeCC46A74ceA6133a12672bD62D5167877B4d521",
                  "0xeeCC46A74ceA6133a12672bD62D5167877B4d521",
                  "0xe5b913f91f2b90c5cd04d711e1eb3214c56dba98"}
+
+#convert to checksum address
+def toCheckSum(address):
+    return Web3.to_checksum_address(address)
 
 #get current wallet balance 
 def getWalletBalance(address):
@@ -64,6 +67,9 @@ def scamInteraction(address, scamAddresses):
         
     return False
 
-print(scamInteraction(address, scamAddresses))
+#check if wallet ever got liquidated
+def gotLiquidated(address):
+    
+    lendingPoolAddress = "0x7d2768dE32b0b80b7a3454c06BdAc96F3e3f2d3" #smart contract address for Aave that holds all funds
     
     
