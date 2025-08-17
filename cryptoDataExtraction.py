@@ -16,10 +16,6 @@ etherscanKey = os.getenv("ETHERSCAN_API")
 address = "0xA97b29B1ee80ED31eB9977E1B3fcda4a803A65f9"
 etherscanURL = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&sort=asc&apikey={etherscanKey}"
 
-#graph initiation variables
-graphKey = os.getenv("GRAPH_API_KEY")
-graphURL = f"https://gateway.thegraph.com/api/{graphKey}/subgraphs/id/C2zniPn45RnLDGzVeGZCx2Sw3GXrbc9gL4ZfL8B8Em2j"
-
 #list of scam addresses taken from CrytoScamDB
 scamAddresses = {"0x08389B19ad52f0d983609ab785b3a43A0E90355F",
                  "0x7bb386c33486fe345168d0af94bef03897e16022",
@@ -76,30 +72,50 @@ def scamInteraction(address, scamAddresses):
 #check if wallet ever got liquidated
 def gotLiquidated(address):
     
-    query = """
-    query($user: String!) {
-      liquidations(where: {user: $user}, orderBy: timestamp, orderDirection: desc) {
-        id
-        user
-        collateralAsset
-        debtAsset
-        liquidator
-        debtToCover
-        liquidatedCollateralAmount
-        timestamp
-      }
-    }
-    """
+    lendingPoolAddress = "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9" #smart contract address for Aave that holds all funds
+    checkSummedPoolAddress = toCheckSum(lendingPoolAddress)
     
-    variables = {"user": address.lower()}
+    #basic ABI for liquidationCalls
+    lendingPoolABI = [
+        {
+            "anonymous": False,
+            "inputs": [
+                {"indexed": True, "name": "collateralAsset", "type": "address"},
+                {"indexed": True, "name": "debtAsset", "type": "address"},
+                {"indexed": True, "name": "user", "type": "address"},
+                {"indexed": False, "name": "debtToCover", "type": "uint256"},
+                {"indexed": False, "name": "liquidatedCollateralAmount", "type": "uint256"},
+                {"indexed": True, "name": "liquidator", "type": "address"},
+                {"indexed": False, "name": "receiveAToken", "type": "bool"}
+            ],
+            "name": "LiquidationCall",
+            "type": "event"
+        }
+    ]
     
-    response = requests.post(graphURL, json={"query": query, "variables": variables})
+    #create the lending pool contract
+    lendingPool = w3.eth.contract(address=lendingPoolAddress, abi=lendingPoolABI)
+    
     #checks for liquidation events from late 2021 to now
     
-    liquidations = response.json()["data"]["liquidations"]
+    from_block = 12000000,
+    to_block = w3.eth.block_number,
+    step = 10000
+    allEvents = []
+    
+    while from_block <= to_block:
+        end_block = min(from_block + step - 1, to_block)
+        eventFilter = lendingPool.events.LiquidationCall.create_filter(
+            from_block = from_block,
+            to_block = end_block,
+            argument_filters={"user": address}
+        )
+        events = eventFilter.get_all_entries()
+        allEvents.extend(events)
+        from_block = end_block + 1
     
     #if account has not been liquidated before
-    if not liquidations:
+    if not allEvents:
         return {
             "liquidated": False,
             "count": 0,
@@ -107,15 +123,15 @@ def gotLiquidated(address):
         }
     
     #if account has been liquidated before, find last liquidation event
-    lastLiquidation = liquidations[0]
-    lastLiquidationTime = datetime.fromtimestamp(
-        int(lastLiquidation["timestamp"]), tz=timezone.utc
-    )
+    lastEvent = allEvents[-1]
+    blockNumber = lastEvent["blockNumber"]
+    block = w3.eth.get_block(blockNumber)
+    timestamp = datetime.fromtimestamp(block["timestamp"], tz = timezone.utc)
     
     return {
         "liquidated": True,
-        "count": len(liquidations),
-        "lastLiquidation": str(lastLiquidationTime)
+        "count": len(allEvents),
+        "lastLiquidation": str(timestamp)
     }
 
 checkedSumAddress = toCheckSum(address)
