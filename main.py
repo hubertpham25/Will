@@ -7,7 +7,7 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-@app.route('/check_rep', methods=['POST'])
+@app.route('/check_reputation', methods=['POST'])
 def check_rep():
     wallet_address = request.form['wallet_address']
     result = calc_rep(wallet_address)
