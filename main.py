@@ -7,12 +7,15 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-@app.route('/check_reputation', methods=['POST'])
-def check_rep():
-    wallet_address = request.form['wallet_address']
-    result = calc_rep(wallet_address)
+@app.route("/check_reputation", methods=["POST"])
+def check_reputation():
+    wallet_address = request.form.get("wallet_address")
+    
+    reputation_score = calc_rep(wallet_address)
 
-    return jsonify(result)
+    return jsonify(
+        reputation_score
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
