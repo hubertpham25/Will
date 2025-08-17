@@ -1,8 +1,9 @@
 from web3 import Web3
 from dotenv import load_dotenv
+from datetime import datetime, timezone
 import os
 import requests
-import datetime
+
 
 load_dotenv()
 
@@ -95,4 +96,33 @@ def gotLiquidated(address):
     #create the lending pool contract
     lendingPool = w3.eth.contract(address=lendingPoolAddress, abi=lendingPoolABI)
     
+    #checks for liquidation events from late 2021 to now
+    fromBlock = 12000000 
+    toBlock = "latest"
     
+    events = lendingPool.events.LiquidationCall().get_logs(
+        fromBlock = fromBlock,
+        toBlock = toBlock,
+        argument_filters={"user": address}
+    )
+    
+    #if account has not been liquidated before
+    if not events:
+        return {
+            "liquidated": False,
+            "count": 0,
+            "lastLiquidation": None
+        }
+    
+    #if account has been liquidated before, find last liquidation event
+    lastEvent = events[-1]
+    blockNumber = lastEvent["blockNumber"]
+    block = w3.eth.get_block(blockNumber)
+    timestamp = datetime.fromtimestamp(block["timestamp"], tz = timezone.utc)
+    
+    return {
+        "liquidated": True,
+        "count": len(events),
+        "lastLiquidation": str(timestamp)
+    }
+
