@@ -46,25 +46,30 @@ def calc_new_rep(address):
     # if the address has been apart of a scam, 
     # liquidation data which is another dictionary
     
-    num_of_transaction = cryptoDB["Amounts of Transaction"]
-    wallet_age = cryptoDB["Wallet Age"]
+    num_of_transaction = cryptoDB["Amount of Transactions"]
     rep_score = get_rep_score(num_of_transaction, address)
     scam_status = cryptoDB["Scam Status"]
+    liquidated = cryptoDB["Liquidations"]["liquidated"]
+
+    if liquidated:
+        rep_score*=0.05
 
     if scam_status == True:
         rep_score *= 0.125
 
+    return rep_score
+
 def get_rep_score(num_of_transaction, address):
     max_score = 200
-    cached_score, timestamp = wallet_address_cache[address]
+    cached_score, _ = wallet_address_cache[address]
     rep_score = 0
     if cached_score != 0:
         rep_score = cached_score
     
-    if num_of_transaction > 0:
+    if num_of_transaction <= 20:
         rep_score += min(num_of_transaction, 20)*0.05
     
-    elif num_of_transaction >20 :
+    elif num_of_transaction <= 100 :
         rep_score += min(num_of_transaction, 100)*0.07
 
     elif 100 < num_of_transaction <= 500:
@@ -77,4 +82,3 @@ def get_rep_score(num_of_transaction, address):
         rep_score = 200
 
     return rep_score
-
