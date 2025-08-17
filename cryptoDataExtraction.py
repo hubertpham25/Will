@@ -76,51 +76,30 @@ def scamInteraction(address, scamAddresses):
 #check if wallet ever got liquidated
 def gotLiquidated(address):
     
-    lendingPoolAddress = "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9" #smart contract address for Aave that holds all funds
-    checkSummedPoolAddress = toCheckSum(lendingPoolAddress)
+    query = """
+    query($user: String!) {
+      liquidations(where: {user: $user}, orderBy: timestamp, orderDirection: desc) {
+        id
+        user
+        collateralAsset
+        debtAsset
+        liquidator
+        debtToCover
+        liquidatedCollateralAmount
+        timestamp
+      }
+    }
+    """
     
-    #basic ABI for liquidationCalls
-    lendingPoolABI = [
-        {
-            "anonymous": False,
-            "inputs": [
-                {"indexed": True, "name": "collateralAsset", "type": "address"},
-                {"indexed": True, "name": "debtAsset", "type": "address"},
-                {"indexed": True, "name": "user", "type": "address"},
-                {"indexed": False, "name": "debtToCover", "type": "uint256"},
-                {"indexed": False, "name": "liquidatedCollateralAmount", "type": "uint256"},
-                {"indexed": True, "name": "liquidator", "type": "address"},
-                {"indexed": False, "name": "receiveAToken", "type": "bool"}
-            ],
-            "name": "LiquidationCall",
-            "type": "event"
-        }
-    ]
+    variables = {"user": address.lower()}
     
-    #create the lending pool contract
-    lendingPool = w3.eth.contract(address=lendingPoolAddress, abi=lendingPoolABI)
-    
+    response = requests.post(graphURL, json={"query": query, "variables": variables})
     #checks for liquidation events from late 2021 to now
     
-    from_block = 12000000
-    to_block = w3.eth.block_number
-    step = 10000
-    allEvents = []
-    
-    while from_block <= to_block:
-        end_block = min(from_block + step - 1, to_block)
-        eventFilter = lendingPool.events.LiquidationCall.create_filter(
-            from_block = from_block,
-            to_block = end_block,
-            argument_filters={"user": address}
-        )
-        events = eventFilter.get_all_entries()
-        allEvents.extend(events)
-        from_block = end_block + 1
-        print(from_block)
+    liquidations = response.json()["data"]["liquidations"]
     
     #if account has not been liquidated before
-    if not allEvents:
+    if not liquidations:
         return {
             "liquidated": False,
             "count": 0,
@@ -128,15 +107,15 @@ def gotLiquidated(address):
         }
     
     #if account has been liquidated before, find last liquidation event
-    lastEvent = allEvents[-1]
-    blockNumber = lastEvent["blockNumber"]
-    block = w3.eth.get_block(blockNumber)
-    timestamp = datetime.fromtimestamp(block["timestamp"], tz = timezone.utc)
+    lastLiquidation = liquidations[0]
+    lastLiquidationTime = datetime.fromtimestamp(
+        int(lastLiquidation["timestamp"]), tz=timezone.utc
+    )
     
     return {
         "liquidated": True,
-        "count": len(allEvents),
-        "lastLiquidation": str(timestamp)
+        "count": len(liquidations),
+        "lastLiquidation": str(lastLiquidationTime)
     }
 
 checkedSumAddress = toCheckSum(address)
