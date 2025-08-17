@@ -1,3 +1,4 @@
+#hubert
 import time
 from cryptoDataExtraction import get_crypto_data  # Fixed import
 
@@ -22,8 +23,8 @@ def calc_rep(wallet_address):  # Fixed parameter name
     
     wallet_address_cache[wallet_address] = (new_score, time.time())
     return {
-        "wallet address": wallet_address,
-        "wallet reputation score": new_score,
+        "Wallet Address": wallet_address,
+        "Wallet Reputation Score": new_score,
         "Safe Address": evaluation
     }
 

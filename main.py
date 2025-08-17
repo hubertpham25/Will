@@ -1,3 +1,4 @@
+#hubert
 from flask import Flask, render_template, request, jsonify
 from data_processing import *
 
@@ -11,7 +12,6 @@ def index():
 def check_reputation():
     wallet_address = request.form.get("wallet_address")
     
-    # dummy reputation logic
     reputation_score = calc_rep(wallet_address)
 
     return jsonify(

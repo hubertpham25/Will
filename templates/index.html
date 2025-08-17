@@ -1,3 +1,4 @@
+{% comment %} hubert {% endcomment %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -29,8 +30,8 @@
             .then(data => {
                 document.getElementById('results').innerHTML = 
                     '<h2>Results:</h2>' +
-                    '<p>Address: ' + data['wallet address'] + '</p>' +
-                    '<p>Score: ' + data['wallet reputation score'] + '</p>' +
+                    '<p>Address: ' + data['Wallet Address'] + '</p>' +
+                    '<p>Score: ' + data['Wallet Reputation Score'] + '</p>' +
                     '<p>Status: ' + data['Safe Address'] + '</p>';
             });
         };
