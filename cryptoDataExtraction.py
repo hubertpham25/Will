@@ -42,7 +42,7 @@ def getWalletBalance(address):
     currentEtherBalance = Web3.from_wei(currentWeiBalance, "ether")
     return currentEtherBalance
 
-#get total transactions - FIXED: now uses the address parameter properly
+#get total transactions
 def getTransactions(address):
     etherscanURL = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&sort=asc&apikey={etherscanKey}"
     response = requests.get(etherscanURL).json()
@@ -134,7 +134,6 @@ def gotLiquidated(address):
         "lastLiquidation": str(timestamp)
     }
 
-# NEW FUNCTION - This is what you'll import and use in your code
 def get_crypto_data(wallet_address):
     """Main function to get all crypto data for any wallet address"""
     checkedSumAddress = toCheckSum(wallet_address)

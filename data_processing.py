@@ -1,16 +1,16 @@
 #hubert
 import time
-from cryptoDataExtraction import get_crypto_data  # Fixed import
+from cryptoDataExtraction import get_crypto_data 
 
 wallet_address_cache = dict()
 sec_in_day = 86400
 
-def calc_rep(wallet_address):  # Fixed parameter name
+def calc_rep(wallet_address): 
     if wallet_address in wallet_address_cache:
         cached_score, timestamp = wallet_address_cache[wallet_address]
         
         if time.time() - timestamp < sec_in_day:
-            evaluation = get_evaluation(cached_score, 200)  # Fixed: define evaluation
+            evaluation = get_evaluation(cached_score, 200) 
             return { 
                 "Wallet Address": wallet_address, 
                 "Wallet Reputation Score": cached_score,
@@ -39,10 +39,10 @@ def get_evaluation(score, max_score):
 
 def calc_new_rep(address):
     # Get fresh data for this specific address
-    crypto_data = get_crypto_data(address)  # Fixed: dynamic data
+    crypto_data = get_crypto_data(address)  
     
     num_of_transaction = crypto_data["Amount of Transactions"]
-    rep_score = get_rep_score(num_of_transaction)  # Fixed: removed address param
+    rep_score = get_rep_score(num_of_transaction) 
     scam_status = crypto_data["Scam Status"]
     liquidated = crypto_data["Liquidations"]["liquidated"]
 
@@ -53,7 +53,7 @@ def calc_new_rep(address):
 
     return rep_score
 
-def get_rep_score(num_of_transaction):  # Fixed: removed cache logic
+def get_rep_score(num_of_transaction):
     rep_score = 0
     
     if num_of_transaction <= 20:
