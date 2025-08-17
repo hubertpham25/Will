@@ -98,8 +98,8 @@ def gotLiquidated(address):
     
     #checks for liquidation events from late 2021 to now
     
-    from_block = 12000000,
-    to_block = w3.eth.block_number,
+    from_block = 12000000
+    to_block = w3.eth.block_number
     step = 10000
     allEvents = []
     
@@ -134,5 +134,15 @@ def gotLiquidated(address):
         "lastLiquidation": str(timestamp)
     }
 
+#get checked sum address
 checkedSumAddress = toCheckSum(address)
-print(gotLiquidated(checkedSumAddress))
+
+#dictionary
+cryptoDB = {
+    "Wallet Balance": getWalletBalance(checkedSumAddress),
+    "Liquidations": gotLiquidated(checkedSumAddress),
+    "Scam Status": scamInteraction(checkedSumAddress, scamAddresses),
+    "Amount of Transactions": getTransactions(checkedSumAddress),
+}
+
+print(cryptoDB)
