@@ -2,6 +2,7 @@ from web3 import Web3
 from dotenv import load_dotenv
 import os
 import requests
+import datetime
 
 load_dotenv()
 
@@ -71,5 +72,27 @@ def scamInteraction(address, scamAddresses):
 def gotLiquidated(address):
     
     lendingPoolAddress = "0x7d2768dE32b0b80b7a3454c06BdAc96F3e3f2d3" #smart contract address for Aave that holds all funds
+    checkSummedPoolAddress = toCheckSum(lendingPoolAddress)
+    
+    #basic ABI for liquidationCalls
+    lendingPoolABI = [
+        {
+            "anonymous": False,
+            "inputs": [
+                {"indexed": True, "name": "collateralAsset", "type": "address"},
+                {"indexed": True, "name": "debtAsset", "type": "address"},
+                {"indexed": True, "name": "user", "type": "address"},
+                {"indexed": False, "name": "debtToCover", "type": "uint256"},
+                {"indexed": False, "name": "liquidatedCollateralAmount", "type": "uint256"},
+                {"indexed": True, "name": "liquidator", "type": "address"},
+                {"indexed": False, "name": "receiveAToken", "type": "bool"}
+            ],
+            "name": "LiquidationCall",
+            "type": "event"
+        }
+    ]
+    
+    #create the lending pool contract
+    lendingPool = w3.eth.contract(address=lendingPoolAddress, abi=lendingPoolABI)
     
     
