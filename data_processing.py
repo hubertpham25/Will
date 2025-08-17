@@ -1,3 +1,4 @@
+#Hubert
 import time, jsonify
 from cryptoDataExtraction import cryptoDB
 
@@ -82,3 +83,4 @@ def get_rep_score(num_of_transaction, address):
         rep_score = 200
 
     return rep_score
+
