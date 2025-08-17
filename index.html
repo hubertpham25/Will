@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wallet Reputation Checker</title>
+</head>
+<body>
+    <h1>Check Wallet Reputation</h1>
+    
+    <form id="reputationForm">
+        <label for="wallet_address">Enter Wallet Address:</label>
+        <input type="text" id="wallet_address" name="wallet_address" 
+               placeholder="0x..." required>
+        <button type="submit">Check Reputation</button>
+    </form>
+    
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('reputationForm').onsubmit = function(e) {
+            e.preventDefault();
+            const address = document.getElementById('wallet_address').value;
+            
+            fetch('/check_reputation', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'wallet_address=' + encodeURIComponent(address)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('results').innerHTML = 
+                    '<h2>Results:</h2>' +
+                    '<p>Address: ' + data['wallet address'] + '</p>' +
+                    '<p>Score: ' + data['wallet reputation score'] + '</p>' +
+                    '<p>Status: ' + data['Safe Address'] + '</p>';
+            });
+        };
+    </script>
+</body>
+</html>

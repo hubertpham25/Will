@@ -1,5 +1,5 @@
 #Hubert
-import time, jsonify
+import time
 from cryptoDataExtraction import cryptoDB
 
 wallet_address_cache = dict()
@@ -11,11 +11,11 @@ def calc_rep(urlPath):
 
         # checks if the current time and the timestamp of the address is less than seconds in a day
         if time.time() - timestamp < sec_in_day:
-            return jsonify({ 
-                            "Wallet Address": wallet_address, 
-                            "Wallet Reputation Score": cached_score,
-                            "Safe Address": evaluation
-                        })
+            return { 
+                    "Wallet Address": wallet_address, 
+                    "Wallet Reputation Score": cached_score,
+                    "Safe Address": evaluation
+                    }
     
     # if not, it will get a new score for the day
     new_score = calc_new_rep(wallet_address)
@@ -30,11 +30,11 @@ def calc_rep(urlPath):
         evaluation = "Reputable. User has enough transactions. Still proceed with caution as always."
 
     wallet_address_cache[wallet_address] = (new_score, time.time())
-    return jsonify({
-                    "wallet address": wallet_address,
-                    "wallet reputation score": new_score,
-                    "Safe Address": evaluation
-                   })
+    return {
+            "wallet address": wallet_address,
+            "wallet reputation score": new_score,
+            "Safe Address": evaluation
+            }
 
 def extract_wallet_address(urlPath):
     # urlPath comes in as "/reputation/0x12a343...", 
