@@ -16,6 +16,10 @@ etherscanKey = os.getenv("ETHERSCAN_API")
 address = "0xA97b29B1ee80ED31eB9977E1B3fcda4a803A65f9"
 etherscanURL = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&sort=asc&apikey={etherscanKey}"
 
+#graph initiation variables
+graphKey = os.getenv("GRAPH_API_KEY")
+graphURL = f"https://gateway.thegraph.com/api/{graphKey}/subgraphs/id/C2zniPn45RnLDGzVeGZCx2Sw3GXrbc9gL4ZfL8B8Em2j"
+
 #list of scam addresses taken from CrytoScamDB
 scamAddresses = {"0x08389B19ad52f0d983609ab785b3a43A0E90355F",
                  "0x7bb386c33486fe345168d0af94bef03897e16022",
