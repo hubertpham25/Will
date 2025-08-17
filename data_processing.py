@@ -47,12 +47,13 @@ def calc_new_rep(address):
     # liquidation data which is another dictionary
     
     num_of_transaction = cryptoDB["Amounts of Transaction"]
-    wallet_age = cryptoDB["Wallet Age"]
     rep_score = get_rep_score(num_of_transaction, address)
     scam_status = cryptoDB["Scam Status"]
 
     if scam_status == True:
         rep_score *= 0.125
+
+    return rep_score
 
 def get_rep_score(num_of_transaction, address):
     max_score = 200
@@ -77,4 +78,3 @@ def get_rep_score(num_of_transaction, address):
         rep_score = 200
 
     return rep_score
-
