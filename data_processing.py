@@ -31,7 +31,7 @@ def calc_rep(wallet_address):
 def get_evaluation(score, max_score):
     ratio = score / max_score
     if ratio < 0.2:
-        return "Not reputable. User does not have enough transaction history."
+        return "Not reputable. User does not have enough transaction history or has been linked to a scam interaction."
     elif ratio < 0.6:
         return "Slightly reputable. User has enough transactions. However, still proceed with caution."
     else:
@@ -49,7 +49,7 @@ def calc_new_rep(address):
     if liquidated:
         rep_score *= 0.05
     if scam_status:
-        rep_score *= 0.125
+        rep_score = 0
 
     return rep_score
 

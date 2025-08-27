@@ -2,8 +2,7 @@
 from web3 import Web3
 from dotenv import load_dotenv
 from datetime import datetime, timezone
-import os
-import requests
+import os, requests, redis
 
 
 load_dotenv()
@@ -28,7 +27,6 @@ scamAddresses = {"0x08389B19ad52f0d983609ab785b3a43A0E90355F",
                  "0x5B6D3d66E18Dfd31ed9A753C406963C401f356C0",
                  "0xc8c3234Aea55a5F746b2aE585a849ba0BFa57785",
                  "0x774148e22F021972bfe082e1548E5d9dC6e1D76E",
-                 "0xeeCC46A74ceA6133a12672bD62D5167877B4d521",
                  "0xeeCC46A74ceA6133a12672bD62D5167877B4d521",
                  "0xe5b913f91f2b90c5cd04d711e1eb3214c56dba98"}
 
@@ -70,72 +68,36 @@ def scamInteraction(address, scamAddresses):
     return False
 
 #check if wallet ever got liquidated
+# redone by Hubert Pham for optimization
 def gotLiquidated(address):
     
     lendingPoolAddress = "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9" #smart contract address for Aave that holds all funds
-    checkSummedPoolAddress = toCheckSum(lendingPoolAddress)
+    liquidation_topic0 = "0xe413a321e8681d831f4dbccbca790d2952b56f977908e45be37335533e005286"
+    user_topic = "0x" + address[2:].lower().zfill(64)
+    url = f"""https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=12000000&toBlock=latest&address={lendingPoolAddress}
+              &topic0={liquidation_topic0}&topic3={user_topic}&apikey={etherscanKey}"""
     
-    #basic ABI for liquidationCalls
-    lendingPoolABI = [
-        {
-            "anonymous": False,
-            "inputs": [
-                {"indexed": True, "name": "collateralAsset", "type": "address"},
-                {"indexed": True, "name": "debtAsset", "type": "address"},
-                {"indexed": True, "name": "user", "type": "address"},
-                {"indexed": False, "name": "debtToCover", "type": "uint256"},
-                {"indexed": False, "name": "liquidatedCollateralAmount", "type": "uint256"},
-                {"indexed": True, "name": "liquidator", "type": "address"},
-                {"indexed": False, "name": "receiveAToken", "type": "bool"}
-            ],
-            "name": "LiquidationCall",
-            "type": "event"
-        }
-    ]
-    
-    #create the lending pool contract
-    lendingPool = w3.eth.contract(address=lendingPoolAddress, abi=lendingPoolABI)
-    
-    #checks for liquidation events from late 2021 to now
-    
-    from_block = 12000000
-    to_block = w3.eth.block_number
-    step = 10000
-    allEvents = []
-    
-    while from_block <= to_block:
-        end_block = min(from_block + step - 1, to_block)
-        eventFilter = lendingPool.events.LiquidationCall.create_filter(
-            from_block = from_block,
-            to_block = end_block,
-            argument_filters={"user": address}
-        )
-        events = eventFilter.get_all_entries()
-        allEvents.extend(events)
-        from_block = end_block + 1
-    
-    #if account has not been liquidated before
-    if not allEvents:
+    response = requests.get(url).json()
+    if response["status"] != "1" or not response.get("result"):
         return {
             "liquidated": False,
             "count": 0,
-            "lastLiquidation": None
+            "last liquidation": None
         }
     
-    #if account has been liquidated before, find last liquidation event
-    lastEvent = allEvents[-1]
-    blockNumber = lastEvent["blockNumber"]
-    block = w3.eth.get_block(blockNumber)
-    timestamp = datetime.fromtimestamp(block["timestamp"], tz = timezone.utc)
+    events = response["result"]
+    last_event = events[-1]
+    timestamp = datetime.fromtimestamp(int(last_event["timeStamp"]), tz=timezone.utc)
+
     
     return {
         "liquidated": True,
-        "count": len(allEvents),
+        "count": len(events),
         "lastLiquidation": str(timestamp)
     }
 
 def get_crypto_data(wallet_address):
-    """Main function to get all crypto data for any wallet address"""
+    # main function to get all crypto data for any wallet address
     checkedSumAddress = toCheckSum(wallet_address)
     
     cryptoDB = {
