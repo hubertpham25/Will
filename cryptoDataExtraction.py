@@ -71,11 +71,10 @@ def scamInteraction(address, scamAddresses):
 # redone by Hubert Pham for optimization
 def gotLiquidated(address):
     
-    lendingPoolAddress = "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9" #smart contract address for Aave that holds all funds
+    lendingPoolAddress = "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2" #smart contract address for Aave that holds all funds
     liquidation_topic0 = "0xe413a321e8681d831f4dbccbca790d2952b56f977908e45be37335533e005286"
     user_topic = "0x" + address[2:].lower().zfill(64)
-    url = f"""https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=12000000&toBlock=latest&address={lendingPoolAddress}
-              &topic0={liquidation_topic0}&topic3={user_topic}&apikey={etherscanKey}"""
+    url = f"https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=12000000&toBlock=latest&address={lendingPoolAddress}&topic0={liquidation_topic0}&topic3={user_topic}&apikey={etherscanKey}"
     
     response = requests.get(url).json()
     if response["status"] != "1" or not response.get("result"):

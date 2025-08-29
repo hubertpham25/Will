@@ -17,10 +17,10 @@ def check_reputation():
     reputation_score = calc_rep(wallet_address)
 
     processing_time = time.time() - start_time
-    print(processing_time)
-    
+    print(f"Time to process wallet: {processing_time} seconds")
+
     return jsonify(
-        reputation_score
+        reputation_score,
     )
 
 if __name__ == "__main__":
